@@ -18,7 +18,13 @@ from abc import abstractmethod
 
 from typing import Dict, Optional
 
+from notification_service.event import EventKey
+
+from ai_flow.model.action import TaskAction
+from ai_flow.model.condition import Condition
 from ai_flow.model.context import Context
+from ai_flow.model.internal.conditions import SingleEventCondition
+from ai_flow.model.rule import TaskRule
 from ai_flow.model.status import TaskStatus
 
 
@@ -42,11 +48,26 @@ class Operator(object):
         :param outputs: Operator output parameters.
         :param kwargs: Operator's extended parameters.
         """
+        from ai_flow.model.workflow import WorkflowContext
         self.name: str = name
         self.config: dict = kwargs
         self.inputs = inputs
         self.outputs = outputs
-        self.workflow = None  # The workflow to which the operator belongs.
+        self.workflow = WorkflowContext.get_current_workflow()  # The workflow to which the operator belongs.
+        self.workflow.tasks[self.name] = self
+
+    def action_on_condition(self, action: TaskAction, condition: Condition):
+        if self.name not in self.workflow.rules:
+            self.workflow.rules[self.name] = []
+        self.workflow.rules[self.name].append(TaskRule(condition=condition, action=action))
+
+    def action_on_event_received(self, event_key: EventKey, action: TaskAction):
+        self.action_on_condition(action=action, condition=SingleEventCondition(expect_event=event_key))
+
+    def action_on_task_status(self,
+                              action: TaskAction,
+                              upstream_task_status_dict: Dict['Operator', TaskStatus]):
+        pass
 
 
 class AIFlowOperator(Operator):
