@@ -18,7 +18,9 @@ from notification_service.event import EventKey, Event
 from typing import List
 
 from ai_flow.model.condition import Condition
-from ai_flow.model.context import Context
+from ai_flow.model.context import Context, RuleExecutionContext
+from ai_flow.model.internal.events import TaskStatusChangedEventKey
+from ai_flow.model.status import TaskStatus
 
 
 class SingleEventCondition(Condition):
@@ -61,3 +63,25 @@ class MeetAnyCondition(Condition):
             if condition.is_met(event, context):
                 return True
         return False
+
+
+class TaskStatusCondition(Condition):
+    def __init__(self,
+                 workflow_name: str,
+                 task_name: str,
+                 namespace: str,
+                 expect_status: TaskStatus
+                 ):
+        super().__init__([TaskStatusChangedEventKey(workflow_name=workflow_name,
+                                                    task_name=task_name,
+                                                    namespace=namespace)])
+        self.expect_status = expect_status
+        self.task_name = task_name
+
+    def is_met(self, event: Event, context: Context) -> bool:
+        context: RuleExecutionContext = context
+        status = context.get_task_status(task_name=self.task_name)
+        if self.expect_status == status:
+            return True
+        else:
+            return False

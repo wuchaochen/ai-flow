@@ -23,7 +23,7 @@ from notification_service.event import EventKey
 from ai_flow.model.action import TaskAction
 from ai_flow.model.condition import Condition
 from ai_flow.model.context import Context
-from ai_flow.model.internal.conditions import SingleEventCondition
+from ai_flow.model.internal.conditions import SingleEventCondition, MeetAllCondition, TaskStatusCondition
 from ai_flow.model.rule import TaskRule
 from ai_flow.model.status import TaskStatus
 
@@ -67,7 +67,14 @@ class Operator(object):
     def action_on_task_status(self,
                               action: TaskAction,
                               upstream_task_status_dict: Dict['Operator', TaskStatus]):
-        pass
+        conditions = []
+        for k, v in upstream_task_status_dict.items():
+            conditions.append(TaskStatusCondition(namespace=self.workflow.namespace,
+                                                  workflow_name=self.workflow.name,
+                                                  task_name=k.name,
+                                                  expect_status=v))
+        self.action_on_condition(action=action,
+                                 condition=MeetAllCondition(conditions=conditions))
 
 
 class AIFlowOperator(Operator):

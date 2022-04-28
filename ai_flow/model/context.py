@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 from ai_flow.model.state import StateDescriptor, State
+from ai_flow.model.status import TaskStatus
 
 
 class Context(object):
@@ -25,4 +26,10 @@ class Context(object):
         :param state_descriptor: Description of the State object.
         :return The State object.
         """
+        pass
+
+
+class RuleExecutionContext(Context):
+
+    def get_task_status(self, task_name) -> TaskStatus:
         pass

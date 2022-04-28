@@ -27,20 +27,24 @@ class AIFlowEventType(object):
 
 class TaskStatusChangedEventKey(EventKey):
     def __init__(self,
+                 workflow_name: str,
                  task_name: str,
                  namespace: str = DEFAULT_NAMESPACE):
         super().__init__(namespace=namespace,
-                         name=task_name,
+                         name=workflow_name,
                          event_type=AIFlowEventType.TASK_STATUS_CHANGED,
                          sender=task_name)
 
 
 class TaskStatusChangedEvent(Event):
     def __init__(self,
+                 workflow_name: str,
                  workflow_execution_id: int,
                  task_name: str,
                  status: TaskStatus,
                  namespace: str = DEFAULT_NAMESPACE):
-        super().__init__(event_key=TaskStatusChangedEventKey(task_name=task_name, namespace=namespace),
+        super().__init__(event_key=TaskStatusChangedEventKey(workflow_name=workflow_name,
+                                                             task_name=task_name,
+                                                             namespace=namespace),
                          message=status)
         self.context = json.dumps({'workflow_execution_id': workflow_execution_id})
