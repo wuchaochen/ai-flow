@@ -1,0 +1,122 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+import "workflow.proto";
+
+option py_generic_services = true;
+option go_package = "/ai_flow";
+
+package ai_flow;
+
+message WorkflowExecutionProto {
+    string id = 1;
+    string namespace = 2;
+    string workflow_name = 3;
+    string status = 4;
+    string run_type = 5;
+    google.protobuf.Timestamp begin_date = 6;
+    google.protobuf.Timestamp end_date = 7;
+}
+message ListWorkflowExecutionsRequest {
+    string namespace = 1;
+    string workflow_name = 2;
+    int64 page_size = 3;
+    int64 offset = 4;
+}
+
+service WorkflowExecutionService{
+  rpc getWorkflowExecution (IdRequest) returns (Response) {
+    option (google.api.http) = {
+      get: "/workflow_execution/get/{id}"
+    };
+  }
+  rpc deleteWorkflowExecution (IdRequest) returns (Response) {
+    option (google.api.http) = {
+      get: "/workflow_execution/delete/{id}"
+    };
+  }
+  rpc listWorkflowExecutions (ListWorkflowExecutionsRequest) returns (Response) {
+    option (google.api.http) = {
+      post: "/workflow_execution/list"
+      body: "*"
+    };
+  }
+  rpc startWorkflowExecution (WorkflowIdentifier) returns (Response) {
+    option (google.api.http) = {
+      post: "/workflow_execution/start"
+      body: "*"
+    };
+  }
+  rpc stopWorkflowExecution (IdRequest) returns (Response) {
+    option (google.api.http) = {
+      post: "/workflow_execution/stop"
+      body: "*"
+    };
+  }
+}
+
+message TaskExecutionProto {
+    int64 id = 1;
+    string task_name = 2;
+    int64 workflow_execution_id = 3;
+    int64 sequence_number = 4;
+    int64 try_number = 5;
+    string status = 6;
+    google.protobuf.Timestamp begin_date = 7;
+    google.protobuf.Timestamp end_date = 8;
+}
+message ListTaskExecutionsRequest {
+    string workflow_execution_id = 1;
+    int64 page_size = 2;
+    int64 offset = 3;
+}
+message TaskIdentifier {
+  string workflow_execution_id = 1;
+  string task_name = 2;
+}
+
+service TaskExecutionService{
+  rpc getTaskExecution (IdRequest) returns (Response) {
+    option (google.api.http) = {
+      get: "/task_execution/get/{id}"
+    };
+  }
+  rpc listTaskExecutions (ListTaskExecutionsRequest) returns (Response) {
+    option (google.api.http) = {
+      post: "/task_execution/list"
+      body: "*"
+    };
+  }
+  rpc startTaskExecution (TaskIdentifier) returns (Response) {
+    option (google.api.http) = {
+      post: "/task_execution/start"
+      body: "*"
+    };
+  }
+  rpc stopTaskExecution (IdRequest) returns (Response) {
+    option (google.api.http) = {
+      post: "/workflow_execution/stop"
+      body: "*"
+    };
+  }
+}

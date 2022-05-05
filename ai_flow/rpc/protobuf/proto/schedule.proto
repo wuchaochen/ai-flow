@@ -1,0 +1,124 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+import "common.proto";
+
+option py_generic_services = true;
+option go_package = "/ai_flow";
+
+package ai_flow;
+
+message ScheduleProto {
+    int64 id = 1;
+    string namespace = 2;
+    string workflow_name = 3;
+    string expression = 4;
+    bool is_paused = 5;
+}
+message ListScheduleRequest {
+    string namespace = 1;
+    string workflow_name = 2;
+    int64 page_size = 3;
+    int64 offset = 4;
+}
+
+service WorkflowScheduleService{
+  rpc addSchedule (ScheduleProto) returns (Response) {
+    option (google.api.http) = {
+      post: "/schedule/add"
+      body: "*"
+    };
+  }
+  rpc getSchedule (IdRequest) returns (Response) {
+    option (google.api.http) = {
+      get: "/schedule/get/{id}"
+    };
+  }
+  rpc deleteSchedule (IdRequest) returns (Response) {
+    option (google.api.http) = {
+      get: "/schedule/delete/{id}"
+    };
+  }
+  rpc pauseSchedule (IdRequest) returns (Response) {
+    option (google.api.http) = {
+      get: "/schedule/pause/{id}"
+    };
+  }
+  rpc resumeSchedule (IdRequest) returns (Response) {
+    option (google.api.http) = {
+      get: "/schedule/resume/{id}"
+    };
+  }
+  rpc listSchedules (ListScheduleRequest) returns (Response) {
+    option (google.api.http) = {
+      post: "/schedule/list"
+      body: "*"
+    };
+  }
+}
+
+message TriggerProto {
+    int64 id = 1;
+    string namespace = 2;
+    string workflow_name = 3;
+    string rules = 4;
+    bool is_paused = 5;
+}
+message ListTriggerRequest {
+    string namespace = 1;
+    string workflow_name = 2;
+    int64 page_size = 3;
+    int64 offset = 4;
+}
+
+service WorkflowTriggerService{
+  rpc addTrigger (TriggerProto) returns (Response) {
+    option (google.api.http) = {
+      post: "/trigger/add"
+      body: "*"
+    };
+  }
+  rpc getTrigger (IdRequest) returns (Response) {
+    option (google.api.http) = {
+      get: "/trigger/get/{id}"
+    };
+  }
+  rpc deleteTrigger (IdRequest) returns (Response) {
+    option (google.api.http) = {
+      get: "/trigger/delete/{id}"
+    };
+  }
+  rpc pauseTrigger (IdRequest) returns (Response) {
+    option (google.api.http) = {
+      get: "/trigger/pause/{id}"
+    };
+  }
+  rpc resumeTrigger (IdRequest) returns (Response) {
+    option (google.api.http) = {
+      get: "/trigger/resume/{id}"
+    };
+  }
+  rpc listTriggers (ListTriggerRequest) returns (Response) {
+    option (google.api.http) = {
+      post: "/trigger/list"
+      body: "*"
+    };
+  }
+}
