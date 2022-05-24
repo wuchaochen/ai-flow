@@ -669,9 +669,7 @@ class MetadataManager(object):
             task_execution = TaskExecutionMeta(workflow_execution_id=workflow_execution_id, task_name=task_name)
             task_execution.begin_date = utcnow()
             task_execution.status = TaskStatus.INIT.value
-            seq = self.session.query(count(TaskExecutionMeta.id)) \
-                .filter(TaskExecutionMeta.workflow_execution_id == workflow_execution_id,
-                        TaskExecutionMeta.task_name == task_name).scalar()
+            seq = self.get_latest_sequence_number(workflow_execution_id=workflow_execution_id, task_name=task_name)
             task_execution.sequence_number = seq + 1
             task_execution.try_number = 1
             self.session.add(task_execution)
@@ -680,6 +678,13 @@ class MetadataManager(object):
         except Exception as e:
             self.session.rollback()
             raise e
+
+    def get_latest_sequence_number(self, workflow_execution_id, task_name) -> int:
+        """Get the latest task execution's sequence number."""
+        task_execution_count = self.session.query(count(TaskExecutionMeta.id)) \
+            .filter(TaskExecutionMeta.workflow_execution_id == workflow_execution_id,
+                    TaskExecutionMeta.task_name == task_name).scalar()
+        return task_execution_count
 
     def update_task_execution(self,
                               task_execution_id,

@@ -290,11 +290,17 @@ class TestMetadataManager(unittest.TestCase):
         workflow_execution_meta = self.metadata_manager.add_workflow_execution(workflow_id=workflow_meta.id,
                                                                                snapshot_id=snapshot.id,
                                                                                run_type=ExecutionType.MANUAL.value)
+        seq_num = self.metadata_manager.get_latest_sequence_number(workflow_execution_id=workflow_execution_meta.id,
+                                                                   task_name='task')
+        self.assertEqual(0, seq_num)
         for i in range(3):
             self.metadata_manager.add_task_execution(workflow_execution_id=workflow_execution_meta.id,
                                                      task_name='task')
         metas = self.metadata_manager.list_task_executions(workflow_execution_id=workflow_execution_meta.id)
         self.assertEqual(3, len(metas))
+        seq_num = self.metadata_manager.get_latest_sequence_number(workflow_execution_id=workflow_execution_meta.id,
+                                                                   task_name='task')
+        self.assertEqual(3, seq_num)
         for i in range(3):
             self.assertEqual(i+1, metas[i].sequence_number)
         meta = self.metadata_manager.get_task_execution(task_execution_id=metas[0].id)
