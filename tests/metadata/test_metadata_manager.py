@@ -153,6 +153,9 @@ class TestMetadataManager(unittest.TestCase):
                                                            name='workflow',
                                                            content=content,
                                                            workflow_object=workflow_object)
+        snapshot_meta = self.metadata_manager.get_latest_snapshot(workflow_id=workflow_meta.id)
+        self.assertIsNone(snapshot_meta)
+
         for i in range(3):
             snapshot_meta = self.metadata_manager.add_workflow_snapshot(workflow_id=workflow_meta.id,
                                                                         workflow_object=workflow_meta.workflow_object,
@@ -167,6 +170,8 @@ class TestMetadataManager(unittest.TestCase):
         self.metadata_manager.delete_workflow_snapshot(1)
         snapshot_metas = self.metadata_manager.list_workflow_snapshots(workflow_id=workflow_meta.id)
         self.assertEqual(2, len(snapshot_metas))
+        snapshot_meta = self.metadata_manager.get_latest_snapshot(workflow_id=workflow_meta.id)
+        self.assertEqual(3, snapshot_meta.id)
 
     def test_workflow_schedule_operations(self):
         namespace_name = 'namespace'

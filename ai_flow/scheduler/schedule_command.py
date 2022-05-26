@@ -17,11 +17,13 @@
 from typing import List
 
 from ai_flow.model.action import TaskAction
+from ai_flow.model.execution_type import ExecutionType
 from ai_flow.model.task_execution import TaskExecutionKey
 
 
 class TaskScheduleCommand(object):
     """The command to schedule tasks"""
+
     def __init__(self,
                  action: TaskAction,
                  current_task_execution: TaskExecutionKey = None,
@@ -38,19 +40,25 @@ class TaskScheduleCommand(object):
 
 class WorkflowExecutionScheduleCommand(object):
     """The command to schedule workflow executions"""
-    def __init__(self, workflow_execution_id: int, task_schedule_results: List[TaskScheduleCommand]):
+
+    def __init__(self, workflow_execution_id: int, task_schedule_commands: List[TaskScheduleCommand]):
         """
         :param workflow_execution_id: The identify of the workflow execution.
-        :param task_schedule_results: The commands of scheduling tasks in the workflow execution.
+        :param task_schedule_commands: The commands of scheduling tasks in the workflow execution.
         """
         self.workflow_execution_id = workflow_execution_id
-        self.task_schedule_results = task_schedule_results
+        self.task_schedule_commands = task_schedule_commands
 
 
 class WorkflowScheduleCommand(object):
     """The command to schedule workflows"""
-    def __init__(self, workflow_id: int):
+
+    def __init__(self, workflow_id: int, snapshot_id: int, run_type: ExecutionType = ExecutionType.EVENT):
         """
         :param workflow_id: The identify of the workflow.
+        :param snapshot_id: The identity of the workflow snapshot.
+        :param run_type: The run type of the workflow execution.
         """
         self.workflow_id = workflow_id
+        self.snapshot_id = snapshot_id
+        self.run_type = run_type

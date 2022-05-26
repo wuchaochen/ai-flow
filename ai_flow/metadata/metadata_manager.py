@@ -370,6 +370,13 @@ class MetadataManager(object):
             query = query.offset(offset)
         return query.all()
 
+    def get_latest_snapshot(self, workflow_id: int) -> WorkflowSnapshotMeta:
+        """Get the latest snapshot by workflow_id"""
+        return self.session.query(WorkflowSnapshotMeta)\
+            .filter(WorkflowSnapshotMeta.workflow_id == workflow_id)\
+            .order_by(WorkflowSnapshotMeta.id.desc()).limit(1) \
+            .first()
+
     def delete_workflow_snapshot(self, snapshot_id):
         """
         Delete the workflow snapshot metadata from MetadataBackend.

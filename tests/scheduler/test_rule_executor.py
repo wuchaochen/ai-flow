@@ -159,11 +159,11 @@ class TestRuleExecutor(unittest.TestCase):
                                          event_type='event_type',
                                          sender='sender'), message='')
         result = self.exec_event_on_workflow_execution(event)
-        self.assertEqual(1, len(result.task_schedule_results))
-        self.assertEqual('op_1', result.task_schedule_results[0].new_task_execution.task_name)
-        self.assertEqual(2, result.task_schedule_results[0].new_task_execution.seq_num)
-        self.assertEqual(None, result.task_schedule_results[0].current_task_execution)
-        self.assertEqual(TaskAction.START, result.task_schedule_results[0].action)
+        self.assertEqual(1, len(result.task_schedule_commands))
+        self.assertEqual('op_1', result.task_schedule_commands[0].new_task_execution.task_name)
+        self.assertEqual(2, result.task_schedule_commands[0].new_task_execution.seq_num)
+        self.assertEqual(None, result.task_schedule_commands[0].current_task_execution)
+        self.assertEqual(TaskAction.START, result.task_schedule_commands[0].action)
 
         event = Event(event_key=EventKey(namespace='namespace',
                                          name='event_2',
@@ -177,23 +177,23 @@ class TestRuleExecutor(unittest.TestCase):
                                          event_type='event_type',
                                          sender='sender'), message='')
         result = self.exec_event_on_workflow_execution(event)
-        self.assertEqual(1, len(result.task_schedule_results))
-        self.assertEqual('op_3', result.task_schedule_results[0].current_task_execution.task_name)
-        self.assertEqual(1, result.task_schedule_results[0].current_task_execution.seq_num)
-        self.assertEqual(None, result.task_schedule_results[0].new_task_execution)
-        self.assertEqual(TaskAction.STOP, result.task_schedule_results[0].action)
+        self.assertEqual(1, len(result.task_schedule_commands))
+        self.assertEqual('op_3', result.task_schedule_commands[0].current_task_execution.task_name)
+        self.assertEqual(1, result.task_schedule_commands[0].current_task_execution.seq_num)
+        self.assertEqual(None, result.task_schedule_commands[0].new_task_execution)
+        self.assertEqual(TaskAction.STOP, result.task_schedule_commands[0].action)
 
         event = Event(event_key=EventKey(namespace='namespace',
                                          name='event_4',
                                          event_type='event_type',
                                          sender='sender'), message='')
         result = self.exec_event_on_workflow_execution(event)
-        self.assertEqual(1, len(result.task_schedule_results))
-        self.assertEqual('op_4', result.task_schedule_results[0].current_task_execution.task_name)
-        self.assertEqual(1, result.task_schedule_results[0].current_task_execution.seq_num)
-        self.assertEqual('op_4', result.task_schedule_results[0].new_task_execution.task_name)
-        self.assertEqual(2, result.task_schedule_results[0].new_task_execution.seq_num)
-        self.assertEqual(TaskAction.RESTART, result.task_schedule_results[0].action)
+        self.assertEqual(1, len(result.task_schedule_commands))
+        self.assertEqual('op_4', result.task_schedule_commands[0].current_task_execution.task_name)
+        self.assertEqual(1, result.task_schedule_commands[0].current_task_execution.seq_num)
+        self.assertEqual('op_4', result.task_schedule_commands[0].new_task_execution.task_name)
+        self.assertEqual(2, result.task_schedule_commands[0].new_task_execution.seq_num)
+        self.assertEqual(TaskAction.RESTART, result.task_schedule_commands[0].action)
 
         event = Event(event_key=EventKey(namespace='namespace',
                                          name='event_5',
@@ -202,16 +202,16 @@ class TestRuleExecutor(unittest.TestCase):
         result = self.exec_event_on_workflow_execution(event)
         self.assertIsNone(result)
         result = self.exec_event_on_workflow_execution(event)
-        self.assertEqual(1, len(result.task_schedule_results))
+        self.assertEqual(1, len(result.task_schedule_commands))
         result = self.exec_event_on_workflow_execution(event)
         self.assertIsNone(result)
 
     def exec_event_on_workflow_execution(self, event):
         rule_extractor = RuleExtractor(metadata_manager=self.metadata_manager)
+        rule_executor = RuleExecutor(metadata_manager=self.metadata_manager)
         results = rule_extractor.extract_workflow_execution_rules(event=event)
-        result = RuleExecutor.execute_workflow_execution_rule(event=event,
-                                                              rule=results[0],
-                                                              metadata_manager=self.metadata_manager)
+        result = rule_executor.execute_workflow_execution_rule(event=event,
+                                                               rule=results[0])
         return result
 
     def _build_workflow_trigger(self):
@@ -313,10 +313,10 @@ class TestRuleExecutor(unittest.TestCase):
 
     def exec_event_on_workflow(self, event):
         rule_extractor = RuleExtractor(metadata_manager=self.metadata_manager)
+        rule_executor = RuleExecutor(metadata_manager=self.metadata_manager)
         results = rule_extractor.extract_workflow_rules(event=event)
-        result = RuleExecutor.execute_workflow_rule(event=event,
-                                                    rule=results[0],
-                                                    metadata_manager=self.metadata_manager)
+        result = rule_executor.execute_workflow_rule(event=event,
+                                                     rule=results[0])
         return result
 
 

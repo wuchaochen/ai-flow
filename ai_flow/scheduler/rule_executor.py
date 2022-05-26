@@ -30,27 +30,27 @@ from ai_flow.scheduler.schedule_command import TaskScheduleCommand, WorkflowExec
 
 
 class RuleExecutor(object):
+    def __init__(self, metadata_manager: MetadataManager):
+        self.metadata_manager = metadata_manager
 
-    @staticmethod
-    def execute_workflow_execution_rule(event: Event,
-                                        rule: WorkflowExecutionRuleWrapper,
-                                        metadata_manager: MetadataManager) \
+    def execute_workflow_execution_rule(self,
+                                        event: Event,
+                                        rule: WorkflowExecutionRuleWrapper) \
             -> Optional[WorkflowExecutionScheduleCommand]:
         """
         Execute all rules in a workflow execution
         :param event: The event that triggers the rule.
         :param rule: A wrapper for all task rules in a workflow execution.
-        :param metadata_manager: A metadata manager.
         """
 
         def build_context(workflow_execution_rule: WorkflowExecutionRuleWrapper) -> Context:
-            workflow_execution_meta = metadata_manager.get_workflow_execution(
+            workflow_execution_meta = self.metadata_manager.get_workflow_execution(
                 workflow_execution_id=workflow_execution_rule.workflow_execution_id)
             workflow_meta = workflow_execution_meta.workflow
             we = workflow_execution_meta_to_workflow_execution(workflow_execution_meta)
             return WorkflowExecutionContextImpl(workflow=cloudpickle.loads(workflow_meta.workflow_object),
                                                 workflow_execution=we,
-                                                metadata_manager=metadata_manager)
+                                                metadata_manager=self.metadata_manager)
 
         context = build_context(workflow_execution_rule=rule)
         results = []
@@ -60,7 +60,7 @@ class RuleExecutor(object):
                 action = task_rule.trigger(event=event, context=context)
                 if action is not None:
                     break
-            seq_num = metadata_manager.get_latest_sequence_number(workflow_execution_id=rule.workflow_execution_id,
+            seq_num = self.metadata_manager.get_latest_sequence_number(workflow_execution_id=rule.workflow_execution_id,
                                                                   task_name=task_rule_wrapper.task_name)
             current_task_execution = TaskExecutionKey(workflow_execution_id=rule.workflow_execution_id,
                                                       task_name=task_rule_wrapper.task_name,
@@ -83,26 +83,24 @@ class RuleExecutor(object):
                 results.append(result)
         if len(results) > 0:
             return WorkflowExecutionScheduleCommand(workflow_execution_id=rule.workflow_execution_id,
-                                                    task_schedule_results=results)
+                                                    task_schedule_commands=results)
         else:
             return None
 
-    @staticmethod
-    def execute_workflow_rule(event: Event,
-                              rule: WorkflowRuleWrapper,
-                              metadata_manager: MetadataManager) -> Optional[WorkflowScheduleCommand]:
+    def execute_workflow_rule(self,
+                              event: Event,
+                              rule: WorkflowRuleWrapper) -> Optional[WorkflowScheduleCommand]:
         """
         Execute all rules on a workflow
         :param event: The event that triggers the rule.
         :param rule: A wrapper for all workflow rules on a workflow.
-        :param metadata_manager: A metadata manager.
         """
 
         def build_context(workflow_rule_wrapper: WorkflowRuleWrapper) -> Context:
-            workflow_meta = metadata_manager.get_workflow_by_id(workflow_id=workflow_rule_wrapper.workflow_id)
+            workflow_meta = self.metadata_manager.get_workflow_by_id(workflow_id=workflow_rule_wrapper.workflow_id)
             return WorkflowContextImpl(namespace=workflow_meta.namespace,
                                        workflow=cloudpickle.loads(workflow_meta.workflow_object),
-                                       metadata_manager=metadata_manager)
+                                       metadata_manager=self.metadata_manager)
 
         context = build_context(workflow_rule_wrapper=rule)
         flag = False
@@ -111,6 +109,7 @@ class RuleExecutor(object):
                 flag = True
                 break
         if flag:
-            return WorkflowScheduleCommand(workflow_id=rule.workflow_id)
+            snapshot_id = self.metadata_manager.get_latest_snapshot(workflow_id=rule.workflow_id)
+            return WorkflowScheduleCommand(workflow_id=rule.workflow_id, snapshot_id=snapshot_id)
         else:
             return None
