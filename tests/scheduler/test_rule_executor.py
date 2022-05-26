@@ -32,7 +32,7 @@ from ai_flow.model.execution_type import ExecutionType
 from ai_flow.model.operator import Operator
 from ai_flow.model.rule import WorkflowRule
 from ai_flow.model.state import ValueStateDescriptor, ValueState
-from ai_flow.model.status import WorkflowStatus
+from ai_flow.model.status import WorkflowStatus, TaskStatus
 from ai_flow.model.workflow import Workflow
 from ai_flow.scheduler.rule_executor import RuleExecutor
 from ai_flow.scheduler.rule_extractor import RuleExtractor
@@ -128,7 +128,7 @@ class TestRuleExecutor(unittest.TestCase):
                                      condition=SimpleCondition(expect_events=expect_events_3, flag=True))
             op_4.action_on_condition(action=TaskAction.RESTART,
                                      condition=SimpleCondition(expect_events=expect_events_4, flag=True))
-            op_5.action_on_condition(action=TaskAction.START,
+            op_5.action_on_condition(action=TaskAction.RESTART,
                                      condition=StateCondition(expect_events=expect_events_5))
 
         workflow_meta = self.metadata_manager.add_workflow(namespace=self.namespace_name,
@@ -147,7 +147,10 @@ class TestRuleExecutor(unittest.TestCase):
         self.metadata_manager.update_workflow_execution_status(
             workflow_execution_id=workflow_execution_meta.id,
             status=WorkflowStatus.RUNNING.value)
-        self.metadata_manager.add_task_execution(workflow_execution_id=workflow_execution_meta.id, task_name='op_1')
+        task_execution_meta = self.metadata_manager.add_task_execution(
+            workflow_execution_id=workflow_execution_meta.id,
+            task_name='op_1')
+        self.metadata_manager.update_task_execution(task_execution_id=task_execution_meta.id, status=TaskStatus.SUCCESS)
         self.metadata_manager.add_task_execution(workflow_execution_id=workflow_execution_meta.id, task_name='op_3')
         self.metadata_manager.add_task_execution(workflow_execution_id=workflow_execution_meta.id, task_name='op_4')
 

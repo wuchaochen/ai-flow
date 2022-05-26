@@ -693,6 +693,16 @@ class MetadataManager(object):
                     TaskExecutionMeta.task_name == task_name).scalar()
         return task_execution_count
 
+    def get_latest_task_execution(self, workflow_execution_id, task_name) -> Optional[TaskExecutionMeta]:
+        """Get the latest task execution's sequence number."""
+        task_execution = self.session.query(TaskExecutionMeta) \
+            .filter(TaskExecutionMeta.workflow_execution_id == workflow_execution_id,
+                    TaskExecutionMeta.task_name == task_name)\
+            .order_by(TaskExecutionMeta.sequence_number.desc())\
+            .limit(1)\
+            .first()
+        return task_execution
+
     def update_task_execution(self,
                               task_execution_id,
                               try_number=None,

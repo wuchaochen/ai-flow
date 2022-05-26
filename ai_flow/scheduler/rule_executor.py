@@ -22,11 +22,16 @@ from ai_flow.metadata.metadata_manager import MetadataManager
 from ai_flow.metadata.util import workflow_execution_meta_to_workflow_execution
 from ai_flow.model.action import TaskAction
 from ai_flow.model.context import Context
+from ai_flow.model.execution_type import ExecutionType
+from ai_flow.model.status import TaskStatus
 from ai_flow.model.task_execution import TaskExecutionKey
 from ai_flow.scheduler.rule_wrapper import WorkflowExecutionRuleWrapper, WorkflowRuleWrapper
 from ai_flow.scheduler.runtime_context import WorkflowExecutionContextImpl, WorkflowContextImpl
 from ai_flow.scheduler.schedule_command import TaskScheduleCommand, WorkflowExecutionScheduleCommand, \
     WorkflowScheduleCommand
+
+DO_NOT_ALLOW_STARTING_STATUS = {TaskStatus.INIT, TaskStatus.RUNNING, TaskStatus.QUEUED,
+                                TaskStatus.RETRYING, TaskStatus.RESTARTING}
 
 
 class RuleExecutor(object):
@@ -60,24 +65,51 @@ class RuleExecutor(object):
                 action = task_rule.trigger(event=event, context=context)
                 if action is not None:
                     break
-            seq_num = self.metadata_manager.get_latest_sequence_number(workflow_execution_id=rule.workflow_execution_id,
-                                                                  task_name=task_rule_wrapper.task_name)
-            current_task_execution = TaskExecutionKey(workflow_execution_id=rule.workflow_execution_id,
-                                                      task_name=task_rule_wrapper.task_name,
-                                                      seq_num=seq_num)
-            new_task_execution = TaskExecutionKey(workflow_execution_id=rule.workflow_execution_id,
-                                                  task_name=task_rule_wrapper.task_name,
-                                                  seq_num=seq_num + 1)
+
             if action is not None:
                 if TaskAction.START == action:
-                    result = TaskScheduleCommand(action=action,
-                                                 current_task_execution=None,
-                                                 new_task_execution=new_task_execution)
+                    current_task_execution_meta = self.metadata_manager.get_latest_task_execution(
+                        workflow_execution_id=rule.workflow_execution_id,
+                        task_name=task_rule_wrapper.task_name)
+                    if current_task_execution_meta is None \
+                            or TaskStatus(current_task_execution_meta.status) not in DO_NOT_ALLOW_STARTING_STATUS:
+                        task_execution_meta = self.metadata_manager.add_task_execution(
+                            workflow_execution_id=rule.workflow_execution_id,
+                            task_name=task_rule_wrapper.task_name)
+                        new_task_execution = TaskExecutionKey(workflow_execution_id=rule.workflow_execution_id,
+                                                              task_name=task_rule_wrapper.task_name,
+                                                              seq_num=task_execution_meta.sequence_number)
+                        result = TaskScheduleCommand(action=action,
+                                                     current_task_execution=None,
+                                                     new_task_execution=new_task_execution)
+                    else:
+                        continue
                 elif TaskAction.RESTART == action:
+                    current_task_execution_meta = self.metadata_manager.get_latest_task_execution(
+                        workflow_execution_id=rule.workflow_execution_id,
+                        task_name=task_rule_wrapper.task_name)
+                    if current_task_execution_meta is None:
+                        current_task_execution = None
+                    else:
+                        current_task_execution = TaskExecutionKey(workflow_execution_id=rule.workflow_execution_id,
+                                                                  task_name=task_rule_wrapper.task_name,
+                                                                  seq_num=current_task_execution_meta.sequence_number)
+                    task_execution_meta = self.metadata_manager.add_task_execution(
+                        workflow_execution_id=rule.workflow_execution_id,
+                        task_name=task_rule_wrapper.task_name)
+                    new_task_execution = TaskExecutionKey(workflow_execution_id=rule.workflow_execution_id,
+                                                          task_name=task_rule_wrapper.task_name,
+                                                          seq_num=task_execution_meta.sequence_number)
                     result = TaskScheduleCommand(action=action,
                                                  current_task_execution=current_task_execution,
                                                  new_task_execution=new_task_execution)
                 else:
+                    current_task_execution_meta = self.metadata_manager.get_latest_task_execution(
+                        workflow_execution_id=rule.workflow_execution_id,
+                        task_name=task_rule_wrapper.task_name)
+                    current_task_execution = TaskExecutionKey(workflow_execution_id=rule.workflow_execution_id,
+                                                              task_name=task_rule_wrapper.task_name,
+                                                              seq_num=current_task_execution_meta.sequence_number)
                     result = TaskScheduleCommand(action=action,
                                                  current_task_execution=current_task_execution)
                 results.append(result)
@@ -109,7 +141,9 @@ class RuleExecutor(object):
                 flag = True
                 break
         if flag:
-            snapshot_id = self.metadata_manager.get_latest_snapshot(workflow_id=rule.workflow_id)
-            return WorkflowScheduleCommand(workflow_id=rule.workflow_id, snapshot_id=snapshot_id)
+            snapshot_meta = self.metadata_manager.get_latest_snapshot(workflow_id=rule.workflow_id)
+            return WorkflowScheduleCommand(workflow_id=rule.workflow_id,
+                                           snapshot_id=snapshot_meta.id,
+                                           run_type=ExecutionType.EVENT)
         else:
             return None
