@@ -50,6 +50,16 @@ class WorkflowExecutionScheduleCommand(object):
         self.task_schedule_commands = task_schedule_commands
 
 
+class WorkflowExecutionStopCommand(object):
+    """The command to stop the workflow execution"""
+
+    def __init__(self, workflow_execution_id: int):
+        """
+        :param workflow_execution_id: The identify of the workflow execution.
+        """
+        self.workflow_execution_id = workflow_execution_id
+
+
 class WorkflowScheduleCommand(object):
     """The command to schedule workflows"""
 
