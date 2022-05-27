@@ -23,7 +23,7 @@ from ai_flow.model.action import TaskAction
 from ai_flow.model.status import TaskStatus, TASK_ALIVE_SET
 from ai_flow.model.task_execution import TaskExecutionKey
 from ai_flow.model.workflow import Workflow
-from ai_flow.scheduler.schedule_command import WorkflowScheduleCommand, TaskScheduleCommand, \
+from ai_flow.scheduler.schedule_command import WorkflowExecutionStartCommand, TaskScheduleCommand, \
     WorkflowExecutionScheduleCommand, WorkflowExecutionStopCommand
 
 
@@ -32,14 +32,15 @@ class WorkflowExecutor(object):
     def __init__(self, metadata_manager: MetadataManager):
         self.metadata_manager = metadata_manager
 
-    def execute(self, schedule_cmd: Union[WorkflowScheduleCommand, WorkflowExecutionStopCommand]) \
+    def execute(self, schedule_cmd: Union[WorkflowExecutionStartCommand, WorkflowExecutionStopCommand]) \
             -> Optional[WorkflowExecutionScheduleCommand]:
         """
         :param schedule_cmd: It is a starting workflow command or stopping workflow execution command.
         :return: A schedule workflow execution command.
         """
-        if isinstance(schedule_cmd, WorkflowScheduleCommand):
-            workflow_execution_meta = self.metadata_manager.add_workflow_execution(workflow_id=schedule_cmd.workflow_id,
+        if isinstance(schedule_cmd, WorkflowExecutionStartCommand):
+            snapshot_meta = self.metadata_manager.get_workflow_snapshot(snapshot_id=schedule_cmd.snapshot_id)
+            workflow_execution_meta = self.metadata_manager.add_workflow_execution(workflow_id=snapshot_meta.workflow_id,
                                                                                    run_type=schedule_cmd.run_type.value,
                                                                                    snapshot_id=schedule_cmd.snapshot_id)
             self.metadata_manager.session.flush()

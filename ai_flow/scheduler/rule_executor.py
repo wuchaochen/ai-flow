@@ -28,7 +28,7 @@ from ai_flow.model.task_execution import TaskExecutionKey
 from ai_flow.scheduler.rule_wrapper import WorkflowExecutionRuleWrapper, WorkflowRuleWrapper
 from ai_flow.scheduler.runtime_context import WorkflowExecutionContextImpl, WorkflowContextImpl
 from ai_flow.scheduler.schedule_command import TaskScheduleCommand, WorkflowExecutionScheduleCommand, \
-    WorkflowScheduleCommand
+    WorkflowExecutionStartCommand
 
 
 class RuleExecutor(object):
@@ -118,7 +118,7 @@ class RuleExecutor(object):
 
     def execute_workflow_rule(self,
                               event: Event,
-                              rule: WorkflowRuleWrapper) -> Optional[WorkflowScheduleCommand]:
+                              rule: WorkflowRuleWrapper) -> Optional[WorkflowExecutionStartCommand]:
         """
         Execute all rules on a workflow
         :param event: The event that triggers the rule.
@@ -139,8 +139,7 @@ class RuleExecutor(object):
                 break
         if flag:
             snapshot_meta = self.metadata_manager.get_latest_snapshot(workflow_id=rule.workflow_id)
-            return WorkflowScheduleCommand(workflow_id=rule.workflow_id,
-                                           snapshot_id=snapshot_meta.id,
-                                           run_type=ExecutionType.EVENT)
+            return WorkflowExecutionStartCommand(snapshot_id=snapshot_meta.id,
+                                                 run_type=ExecutionType.EVENT)
         else:
             return None

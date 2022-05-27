@@ -28,7 +28,7 @@ from ai_flow.model.action import TaskAction
 from ai_flow.model.condition import Condition
 from ai_flow.model.operator import Operator
 from ai_flow.model.workflow import Workflow
-from ai_flow.scheduler.schedule_command import WorkflowScheduleCommand, WorkflowExecutionStopCommand
+from ai_flow.scheduler.schedule_command import WorkflowExecutionStartCommand, WorkflowExecutionStopCommand
 from ai_flow.scheduler.workflow_executor import WorkflowExecutor
 
 
@@ -95,8 +95,7 @@ class TestWorkflowExecutor(unittest.TestCase):
 
         workflow_executor = WorkflowExecutor(metadata_manager=self.metadata_manager)
 
-        command = workflow_executor.execute(WorkflowScheduleCommand(workflow_id=workflow_meta.id,
-                                                                    snapshot_id=snapshot_meta.id))
+        command = workflow_executor.execute(WorkflowExecutionStartCommand(snapshot_id=snapshot_meta.id))
         self.metadata_manager.commit()
         self.assertIsNotNone(command)
         self.assertEqual(3, len(command.task_schedule_commands))
