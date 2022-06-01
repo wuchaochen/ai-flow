@@ -20,7 +20,7 @@ import cloudpickle
 
 from ai_flow.metadata.metadata_manager import MetadataManager, Filters, FilterIn
 from ai_flow.model.action import TaskAction
-from ai_flow.model.status import TaskStatus, TASK_ALIVE_SET
+from ai_flow.model.status import TASK_ALIVE_SET
 from ai_flow.model.task_execution import TaskExecutionKey
 from ai_flow.model.workflow import Workflow
 from ai_flow.scheduler.schedule_command import WorkflowExecutionStartCommand, TaskScheduleCommand, \

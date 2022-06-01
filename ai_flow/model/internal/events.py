@@ -102,9 +102,10 @@ class InnerEvent(Event):
 
 
 class StartWorkflowExecutionEvent(InnerEvent):
-    def __init__(self, snapshot_id):
+    def __init__(self, workflow_id, snapshot_id):
         super().__init__(InnerEventType.START_WORKFLOW_EXECUTION, None)
-        self.context = json.dumps({EventContextConstant.WORKFLOW_SNAPSHOT_ID: snapshot_id})
+        self.context = json.dumps({EventContextConstant.WORKFLOW_ID: workflow_id,
+                                   EventContextConstant.WORKFLOW_SNAPSHOT_ID: snapshot_id})
 
 
 class StopWorkflowExecutionEvent(InnerEvent):
@@ -128,9 +129,10 @@ class ReStartTaskExecutionEvent(InnerEvent):
 
 
 class StopTaskExecutionEvent(InnerEvent):
-    def __init__(self, task_execution_id: int):
+    def __init__(self, workflow_execution_id: int, task_execution_id: int):
         super().__init__(InnerEventType.STOP_TASK_EXECUTION, None)
-        self.context = json.dumps({EventContextConstant.TASK_EXECUTION_ID: task_execution_id})
+        self.context = json.dumps({EventContextConstant.WORKFLOW_EXECUTION_ID: workflow_execution_id,
+                                   EventContextConstant.TASK_EXECUTION_ID: task_execution_id})
 
 
 class PeriodicRunTaskEvent(InnerEvent):

@@ -71,7 +71,7 @@ class TestInnerEventProcessor(unittest.TestCase):
     def test_process_event(self):
         inner_event_processor = InnerEventProcessor(metadata_manager=self.metadata_manager)
         workflow_executor = WorkflowExecutor(metadata_manager=self.metadata_manager)
-        event: Event = StartWorkflowExecutionEvent(snapshot_id=self.snapshot_meta.id)
+        event: Event = StartWorkflowExecutionEvent(workflow_id=self.workflow_meta.id, snapshot_id=self.snapshot_meta.id)
         command = inner_event_processor.process(event)
         self.assertTrue(isinstance(command, WorkflowExecutionStartCommand))
         self.assertEquals(self.snapshot_meta.id, command.snapshot_id)
@@ -98,7 +98,8 @@ class TestInnerEventProcessor(unittest.TestCase):
                                                                 page_size=None)
         self.assertEqual(2, len(task_metas))
 
-        event = StopTaskExecutionEvent(task_execution_id=task_metas[1].id)
+        event = StopTaskExecutionEvent(workflow_execution_id=task_metas[1].workflow_execution_id,
+                                       task_execution_id=task_metas[1].id)
         command = inner_event_processor.process(event)
         self.assertTrue(isinstance(command, WorkflowExecutionScheduleCommand))
         self.assertEqual(1, len(command.task_schedule_commands))
