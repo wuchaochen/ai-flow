@@ -311,7 +311,6 @@ class MetadataManager(object):
         self.session.add(workflow_snapshot_meta)
         return workflow_snapshot_meta
 
-
     def get_workflow_snapshot(self, snapshot_id) -> WorkflowSnapshotMeta:
         """
         Get the workflow snapshot metadata from MetadataBackend.
